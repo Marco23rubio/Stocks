@@ -17,7 +17,7 @@ from dateutil.relativedelta import relativedelta
 # In[124]:
 
 
-ticket = "ADBE"
+ticket = "BAC"
 ruta = "USA/"
 archivo = f'{ticket}.xlsx'
 ruta_archivo = ruta + archivo
@@ -404,7 +404,7 @@ def agregar_razon_financiera(df_anual_filtrado, fila_numerador, nombre_nueva_fil
 
     razon_financiera = []
     for num, den in zip(fila_num.values, fila_den):
-        if den != 0:
+        if pd.notna(den) and den != 0:
             razon = num / den
             if como_porcentaje:
                 razon *= 100
@@ -429,7 +429,7 @@ def agregar_razon_financiera_numerador(df_anual_filtrado, nombre_nueva_fila,
 
     razon_financiera = []
     for num, den in zip(resta_numeradores, fila_den.values):
-        if den != 0:
+        if pd.notna(den) and den != 0:
             razon = num / den
             if como_porcentaje:
                 razon *= 100
@@ -605,10 +605,16 @@ razones_financieras.loc[ratios_absolutos, razones_financieras.columns[2:]] = (
 
 cols_numericas = razones_financieras.columns[2:]
 
+# Guardamos dónde dice "no deuda" antes de forzar a numérico
+mask_no_deuda = razones_financieras[cols_numericas] == "no deuda"
+
 razones_financieras[cols_numericas] = (
     razones_financieras[cols_numericas]
     .apply(pd.to_numeric, errors="coerce")
 )
+
+# Restauramos "no deuda" donde correspondía
+razones_financieras[cols_numericas] = razones_financieras[cols_numericas].where(~mask_no_deuda, "no deuda")
 
 
 # ## Book Value per Share
