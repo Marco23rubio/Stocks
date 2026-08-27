@@ -2273,8 +2273,6 @@ if len(df_valuaciones) > 5:
     df_valuaciones = df_valuaciones.iloc[5:].reset_index(drop=True)
 
 
-data_stock_modelo
-
 data_stock_modelo = pd.read_csv(archivo_stock + '.csv')
 data_stock_modelo.drop(columns=["Vol.","Cierre","Apertura"], inplace=True)
 data_stock_modelo["Fecha"] = pd.to_datetime(
