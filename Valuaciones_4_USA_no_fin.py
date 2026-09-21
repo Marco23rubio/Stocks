@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[123]:
-
-
 import pandas as pd
 import numpy as np
 from datetime import datetime
@@ -14,10 +8,7 @@ from functools import reduce
 from dateutil.relativedelta import relativedelta
 
 
-# In[124]:
-
-
-ticket = "BAC"
+ticket = "DECK"
 ruta = "USA/"
 archivo = f'{ticket}.xlsx'
 ruta_archivo = ruta + archivo
@@ -26,10 +17,6 @@ archivo_market = "Datos históricos del S&P 500 TR"
 market_risk_premium = 0.07
 archivo_market_bonos = "bonos_usa"
 archivo_inflacion_usa = "inflation_usa"
-
-
-# In[125]:
-
 
 df_err = pd.read_excel(ruta_archivo, header=19)
 
@@ -47,9 +34,6 @@ df_err.columns = df_err.iloc[0]
 if '\t' in df_err.columns:
     df_err = df_err.drop(columns=['\t'], errors='ignore')
 df_err = df_err[1:].reset_index(drop=True)
-
-
-# In[126]:
 
 
 cols = df_err.columns.tolist()
@@ -87,9 +71,6 @@ last_20_years = valid_years[-20:]
 last_20_years_mes = valid_headers[-20:]
 
 
-# In[127]:
-
-
 def calcular_crecimiento_syp(archivo_csv, mes_anio, periodo_anos=5):
     df = pd.read_csv(f"{archivo_csv}.csv")
     df['Fecha'] = pd.to_datetime(df['Fecha'], format='%d.%m.%Y')
@@ -124,9 +105,6 @@ for mes_anio in valid_headers:
     })
 
 
-# In[128]:
-
-
 data_bonos = pd.read_csv(archivo_market_bonos + '.csv' , header=0)
 
 data_bonos['observation_date'] = pd.to_datetime(data_bonos['observation_date'], format='%Y-%m-%d')
@@ -153,10 +131,6 @@ for mes_anio in valid_headers:
     })
 
 promedio_bonos = pd.DataFrame(resultados_bonos)
-
-
-# In[129]:
-
 
 data_inflacion_usa = pd.read_csv(archivo_inflacion_usa + ".csv")
 
@@ -190,8 +164,6 @@ df_resultados_inf_usa["Tasa de Inflación"] = (
 ).round(4)
 
 
-
-# In[130]:
 
 
 df_stock  = pd.read_csv(f"{archivo_stock}.csv")
@@ -228,9 +200,6 @@ df_market = df_market.dropna(subset=['Cierre']).copy()
 
 df_market['Rend_Market'] = df_market['Cierre'].pct_change()
 df_market = df_market.dropna(subset=['Rend_Market']).copy()
-
-
-# In[131]:
 
 
 # Asegurar datetime
@@ -275,24 +244,15 @@ for mes_anio in valid_headers:
 
 df_beta_resultado = pd.DataFrame(resultados_beta)
 
-
-# In[132]:
-
-
 # Obtengo los DF para datos anuales y trimestrales
 indice_ttm = df_err.columns.tolist().index(nombre_ttm)  # primera ocurrencia
 
 df_anual = df_err.iloc[:, :indice_ttm + 1]
-# df_trimestral = df_err.iloc[:, indice_ttm + 1:]
-# df_trimestral.insert(0, 'Fiscal Period', df_err['Fiscal Period'])
-df_trimestral = df_err.iloc[:, indice_ttm + 1:].copy()
+df_trimestral = df_err.iloc[:, indice_ttm + 1:]
 df_trimestral.insert(0, 'Fiscal Period', df_err['Fiscal Period'])
 
 # df_err queda solo con columnas anuales + TTM (sin trimestrales)
 df_err = df_anual.copy()
-
-
-# In[133]:
 
 
 columna_anterior = df_anual.columns[indice_ttm - 1]
@@ -324,9 +284,6 @@ if nombre_ttm in df_anual_filtrado.columns:
 df_anual_filtrado = df_anual_filtrado.fillna(0)
 
 
-# In[134]:
-
-
 pattern = re.compile(r"\d{4}")
 
 columnas_con_anio_trimestral = [
@@ -350,10 +307,6 @@ columnas_especiales_trimestral = ["Fiscal Period"]
 df_trimestral_filtrado = df_trimestral[columnas_especiales_trimestral + columnas_filtradas_trimestral].copy()
 df_trimestral_filtrado = df_trimestral_filtrado.fillna(0)
 
-
-# In[135]:
-
-
 def limpiar_df_financiero(df):
     df = df.copy()
 
@@ -372,16 +325,8 @@ def limpiar_df_financiero(df):
 df_anual_filtrado = limpiar_df_financiero(df_anual_filtrado)
 df_trimestral_filtrado = limpiar_df_financiero(df_trimestral_filtrado)
 
-
-# In[136]:
-
-
 df_anual_filtrado = df_anual_filtrado.dropna(axis=1, how='all')
 df_trimestral_filtrado = df_trimestral_filtrado.dropna(axis=1, how='all')
-
-
-# In[137]:
-
 
 razones_financieras = pd.DataFrame(
     columns=['Calculo', 'Explicacion'] + 
@@ -389,7 +334,27 @@ razones_financieras = pd.DataFrame(
 )
 
 
-# In[138]:
+# def agregar_razon_financiera(df_anual_filtrado, fila_numerador, nombre_nueva_fila,
+#                              *filas_denominadoras, como_porcentaje=True,
+#                              calculo="", explicacion=""):
+
+#     global razones_financieras
+
+#     fila_num = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == fila_numerador].iloc[0, 1:]
+#     fila_den = sum(df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == fila].iloc[0, 1:].values
+#                    for fila in filas_denominadoras)
+
+#     razon_financiera = []
+#     for num, den in zip(fila_num.values, fila_den):
+#         if den != 0:
+#             razon = num / den
+#             if como_porcentaje:
+#                 razon *= 100
+#             razon_financiera.append(f"{razon:.2f}")
+#         else:
+#             razon_financiera.append("no deuda")
+
+#     razones_financieras.loc[nombre_nueva_fila] = [calculo, explicacion] + razon_financiera
 
 
 def agregar_razon_financiera(df_anual_filtrado, fila_numerador, nombre_nueva_fila,
@@ -398,21 +363,64 @@ def agregar_razon_financiera(df_anual_filtrado, fila_numerador, nombre_nueva_fil
 
     global razones_financieras
 
-    fila_num = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == fila_numerador].iloc[0, 1:]
-    fila_den = sum(df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == fila].iloc[0, 1:].values
-                   for fila in filas_denominadoras)
+    # Guard: si falta numerador o algún denominador, registrar N/A y salir
+    n_cols = len(razones_financieras.columns) - 2
+    filas_requeridas = [fila_numerador] + list(filas_denominadoras)
+    for fila in filas_requeridas:
+        if not (df_anual_filtrado['Fiscal Period'] == fila).any():
+            razones_financieras.loc[nombre_nueva_fila] = [calculo, explicacion] + ['N/A'] * n_cols
+            return
 
+    # 1. Extracción del numerador y denominadores
+    fila_num = df_anual_filtrado.loc[df_anual_filtrado['Fiscal Period'] == fila_numerador].iloc[0, 1:].astype(float)
+    
+    if filas_denominadoras:
+        filas_den = df_anual_filtrado.loc[df_anual_filtrado['Fiscal Period'].isin(filas_denominadoras)].iloc[:, 1:].astype(float)
+        fila_den_sum = filas_den.sum(axis=0)
+    else:
+        fila_den_sum = pd.Series([1] * len(fila_num), index=fila_num.index)
+
+    # 2. Detección de filas de deuda
+    palabras_clave = ['debt', 'deuda']
+    todas_las_filas = [fila_numerador] + list(filas_denominadoras)
+    
+    filas_es_deuda = [fila for fila in todas_las_filas if any(palabra in fila.lower() for palabra in palabras_clave)]
+    
+    es_cero_deuda = pd.Series([False] * len(fila_num), index=fila_num.index)
+    
+    if filas_es_deuda:
+        df_deuda = df_anual_filtrado.loc[df_anual_filtrado['Fiscal Period'].isin(filas_es_deuda)].iloc[:, 1:].astype(float)
+        es_cero_deuda = (df_deuda.sum(axis=0) == 0)
+
+    # 3. Cálculo matemático base
+    multiplicador = 100 if como_porcentaje else 1
+    razon_calculada = np.where(
+        fila_den_sum != 0, 
+        (fila_num / fila_den_sum) * multiplicador, 
+        np.nan 
+    )
+    
+    # 4. Formateo corregido
     razon_financiera = []
-    for num, den in zip(fila_num.values, fila_den):
-        if pd.notna(den) and den != 0:
-            razon = num / den
-            if como_porcentaje:
-                razon *= 100
-            razon_financiera.append(f"{razon:.2f}")
+    for i, valor_calculado in enumerate(razon_calculada):
+        # CASO A: Es una cuenta de deuda explícita y su valor es 0
+        if es_cero_deuda.iloc[i]:
+            razon_financiera.append("No deuda")
+            
+        # CASO B: El cálculo fue exitoso (el denominador NO era 0)
+        elif pd.notna(valor_calculado):
+            razon_financiera.append(f"{valor_calculado:.2f}")
+            
+        # CASO C: El denominador era 0, pero NO es una cuenta de deuda (Ej. Gross Profit = 0)
         else:
-            razon_financiera.append("no deuda")
+            # Puedes cambiar "N/A" por "0.00", "-", o lo que uses financieramente para estos casos
+            razon_financiera.append("N/A") 
 
+    # 5. Asignación
     razones_financieras.loc[nombre_nueva_fila] = [calculo, explicacion] + razon_financiera
+
+
+
 
 def agregar_razon_financiera_numerador(df_anual_filtrado, nombre_nueva_fila,
                                        fila_denominador, fila_numerador_1,
@@ -420,6 +428,13 @@ def agregar_razon_financiera_numerador(df_anual_filtrado, nombre_nueva_fila,
                                        calculo="", explicacion=""):
 
     global razones_financieras
+
+    # Guard: si falta alguna fila requerida, registrar N/A y salir
+    n_cols = len(razones_financieras.columns) - 2
+    for fila in [fila_denominador, fila_numerador_1, fila_numerador_2]:
+        if not (df_anual_filtrado['Fiscal Period'] == fila).any():
+            razones_financieras.loc[nombre_nueva_fila] = [calculo, explicacion] + ['N/A'] * n_cols
+            return
 
     fila_num_1 = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == fila_numerador_1].iloc[0, 1:]
     fila_num_2 = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == fila_numerador_2].iloc[0, 1:]
@@ -429,7 +444,7 @@ def agregar_razon_financiera_numerador(df_anual_filtrado, nombre_nueva_fila,
 
     razon_financiera = []
     for num, den in zip(resta_numeradores, fila_den.values):
-        if pd.notna(den) and den != 0:
+        if den != 0:
             razon = num / den
             if como_porcentaje:
                 razon *= 100
@@ -444,6 +459,12 @@ def agregar_fila(df_anual_filtrado, fila_nombre, nombre_nueva_fila,
 
     global razones_financieras
 
+    # Guard: si la fila no existe, registrar N/A y salir
+    if not (df_anual_filtrado['Fiscal Period'] == fila_nombre).any():
+        n_cols = len(razones_financieras.columns) - 2
+        razones_financieras.loc[nombre_nueva_fila] = [calculo, explicacion] + ['N/A'] * n_cols
+        return
+
     fila = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == fila_nombre].iloc[0, 1:]
     razones_financieras.loc[nombre_nueva_fila] = [calculo, explicacion] + list(fila.values)
 
@@ -452,7 +473,13 @@ def agregar_crecimiento_anual(fila_nombre, nombre_nueva_fila,
 
     global razones_financieras
 
-    fila = razones_financieras.loc[fila_nombre].iloc[2:].astype(float)
+    # Guard: si la fila base no existe, registrar N/A y salir
+    if fila_nombre not in razones_financieras.index:
+        n_cols = len(razones_financieras.columns) - 2
+        razones_financieras.loc[nombre_nueva_fila] = [calculo, explicacion] + ['N/A'] * n_cols
+        return
+
+    fila = pd.to_numeric(razones_financieras.loc[fila_nombre].iloc[2:], errors='coerce')
 
     crecimiento_anual = fila.pct_change() * 100
     crecimiento_anual = crecimiento_anual.fillna(0)
@@ -467,29 +494,19 @@ def dividir_filas_razones_financieras(fila_numerador, fila_denominador,
 
     global razones_financieras
 
-    fila_num = razones_financieras.loc[fila_numerador].iloc[2:].astype(float)
-    fila_den = razones_financieras.loc[fila_denominador].iloc[2:].astype(float)
+    fila_num = pd.to_numeric(razones_financieras.loc[fila_numerador].iloc[2:], errors='coerce')
+    fila_den = pd.to_numeric(razones_financieras.loc[fila_denominador].iloc[2:], errors='coerce')
 
-    # razon_financiera = fila_num.values / fila_den.values
-
-    razon_financiera = np.divide(
-    fila_num.values, 
-    fila_den.values, 
-    out=np.full_like(fila_num.values, np.nan, dtype=float), 
-    where=fila_den.values != 0
-    )
+    razon_financiera = (fila_num / fila_den).values
 
     if como_porcentaje:
-        razon_financiera *= 100
+        razon_financiera = razon_financiera * 100
 
     razon_financiera = pd.Series(razon_financiera).fillna(0).values
     razon_financiera_formateada = [f"{x:.2f}" for x in razon_financiera]
 
     razones_financieras.loc[nombre_nueva_fila] = [calculo, explicacion] + razon_financiera_formateada
 
-
-
-# In[139]:
 
 
 # Llamadas a la función con el nuevo orden de parámetros
@@ -584,51 +601,32 @@ agregar_fila(df_anual_filtrado,'Altman Z-Score','Altman Z score',calculo="",expl
 agregar_fila(df_anual_filtrado,'Beneish M-Score','Beneish M-Score',calculo="",explicacion="* Menor a 1.78 indica que podrian manipular sus estados financieros.\n* Mayor a 1.78, podria indicar que no manipulan sus estados financieros")
 
 
-# In[140]:
-
+razones_financieras
 
 ratios_absolutos = [
     "Beneish M-Score",
     "Gasto financiero(%)",
 ]
 
-# Aplicar abs solo a columnas numéricas (desde la 3ra en adelante)
+# Usar apply con pd.to_numeric y errors='coerce' para evitar que strings como 'no deuda' rompan el código
 razones_financieras.loc[ratios_absolutos, razones_financieras.columns[2:]] = (
     razones_financieras.loc[ratios_absolutos, razones_financieras.columns[2:]]
-    .astype(float)
+    .apply(pd.to_numeric, errors='coerce')
     .abs()
 )
 
+# cols_numericas = razones_financieras.columns[2:]
 
-# In[141]:
-
-
-cols_numericas = razones_financieras.columns[2:]
-
-# Guardamos dónde dice "no deuda" antes de forzar a numérico
-mask_no_deuda = razones_financieras[cols_numericas] == "no deuda"
-
-razones_financieras[cols_numericas] = (
-    razones_financieras[cols_numericas]
-    .apply(pd.to_numeric, errors="coerce")
-)
-
-# Restauramos "no deuda" donde correspondía
-razones_financieras[cols_numericas] = razones_financieras[cols_numericas].where(~mask_no_deuda, "no deuda")
-
+# razones_financieras[cols_numericas] = (
+#     razones_financieras[cols_numericas]
+#     .apply(pd.to_numeric, errors="coerce")
+# )
 
 # ## Book Value per Share
-
-# In[142]:
-
 
 total_assets = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Total Assets'].iloc[0, 1:]
 total_liabilities = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Total Liabilities'].iloc[0, 1:]
 total_shares = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Shares Outstanding (Basic Average)'].iloc[0, 1:]
-
-
-# In[143]:
-
 
 book_value = total_assets - total_liabilities
 
@@ -639,9 +637,7 @@ book_value_per_share_anual = pd.DataFrame({
     'Book Value per Share': book_value_per_share
 }, index=total_assets.index)
 
-
 # ## Liquidation Value
-# 
 
 # Utilizable con empresas a la baja, si el precio se encuentra por debajo de este,podria ser una oportunidad
 
@@ -734,9 +730,6 @@ book_value_per_share_anual = pd.DataFrame({
 # Intangible Assets (valor de marca, patentes, etc.)
 # Goodwill (ya que en liquidación normalmente no tiene valor)
 
-# In[144]:
-
-
 ratio_recuperacion_efectivo = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Cash, Cash Equivalents, Marketable Securities'].iloc[0, 1:] * 0.95
 
 ratio_recuperacion_cc = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Total Receivables'].iloc[0, 1:] * 0.75
@@ -750,18 +743,11 @@ ratio_recuperacion_act_tangibles =df_anual_filtrado[df_anual_filtrado['Fiscal Pe
 total_liabilities = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Total Liabilities'].iloc[0, 1:]
 
 
-# In[145]:
-
-
 liquidation_value = ratio_recuperacion_efectivo + ratio_recuperacion_cc + ratio_recuperacion_inv + ratio_recuperacion_ppe + ratio_recuperacion_act_tangibles - total_liabilities
 
 liquidation_value_per_share = liquidation_value / total_shares
 
-
 # ## EPV
-
-# In[146]:
-
 
 margen_operativo = (
     razones_financieras
@@ -796,9 +782,6 @@ df_promedios_ebit = (
 )
 
 
-# In[147]:
-
-
 ventas = (
     razones_financieras
         .loc["Sales"]
@@ -829,9 +812,6 @@ df_promedios_ventas = (
         .reset_index()
         .rename(columns={"index": "Periodo"})
 )
-
-
-# In[148]:
 
 
 SGyA = df_trimestral_filtrado[df_trimestral_filtrado['Fiscal Period'] == 'Selling, General, & Admin. Expense'].iloc[0, 1:]
@@ -873,9 +853,6 @@ df_promedios_sgya = (
 )
 
 
-# In[149]:
-
-
 # Asegurar que la primera columna se llame "Año"
 df_promedios_ventas = df_promedios_ventas.rename(
     columns={df_promedios_ventas.columns[0]: "Año"}
@@ -909,9 +886,6 @@ df_ebit_normalizado = df_ebit_normalizado.iloc[
 ].reset_index(drop=True)
 
 
-# In[150]:
-
-
 tax_rate = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Tax Rate %'].iloc[0, 1:]
 
 tax_rate.index = tax_rate.index.str.extract(r'(\d{4})').astype(int)[0]
@@ -930,10 +904,6 @@ df_promedios_tax = pd.DataFrame.from_dict(promedios_tax, orient='index', columns
 df_promedios_tax.index.name = 'Año'
 df_promedios_tax = df_promedios_tax.reset_index().fillna(0)
 
-
-# In[151]:
-
-
 # Join por año entero (clave temporal) conservando MonAño en el output
 df_ebit_join = df_ebit_normalizado.copy()
 df_ebit_join["_key"] = df_ebit_join["Año"].str[-4:].astype(int)
@@ -950,9 +920,6 @@ df_after_tax_ebit = pd.DataFrame({
     "Año":           df_merged["Año"],
     "After_Tax_EBIT": after_tax_ebit.round(2)
 })
-
-
-# In[152]:
 
 
 DDA = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Depreciation, Depletion and Amortization'].iloc[0, 1:]
@@ -973,10 +940,6 @@ df_promedios_dda = pd.DataFrame.from_dict(promedios_dda, orient='index', columns
 df_promedios_dda.index.name = 'Año'
 df_promedios_dda = df_promedios_dda.reset_index()
 
-
-# In[153]:
-
-
 df_promedios_dda = df_promedios_dda.sort_values("Año").reset_index(drop=True)
 df_promedios_tax = df_promedios_tax.sort_values("Año").reset_index(drop=True)
 
@@ -990,10 +953,6 @@ df_depreciacion_exceso = pd.DataFrame({
     "Año": df_promedios_dda["Año"],
     "Depreciacion_en_exceso": depreciacion_exceso.round(2)
 })
-
-
-# In[154]:
-
 
 # Join por año entero (clave temporal) — df_after_tax_ebit tiene MonAño, df_depreciacion_exceso tiene int
 df_at_join = df_after_tax_ebit.copy()
@@ -1016,9 +975,6 @@ df_normalized_earnings = pd.DataFrame({
 df_normalized_earnings = df_normalized_earnings.iloc[
     pd.to_datetime(df_normalized_earnings["Año"], format="%b%Y").argsort()
 ].reset_index(drop=True)
-
-
-# In[155]:
 
 
 accumulated_depreciation = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == '  Accumulated Depreciation'].iloc[0, 1:]
@@ -1046,10 +1002,6 @@ df_net_ppe = df_ppe.loc[last_20_years_mes].copy()
 df_net_ppe["Año"] = df_net_ppe.index
 df_net_ppe = df_net_ppe.reset_index(drop=True)
 
-
-# In[156]:
-
-
 capex = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Capital Expenditure'].iloc[0, 1:]
 revenue = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Revenue'].iloc[0, 1:]
 
@@ -1065,9 +1017,6 @@ df_capex_revenue = pd.DataFrame({
     "Capital_Expenditure": capex.values,
     "Revenue": revenue.values
 })
-
-
-# In[157]:
 
 
 df_capex_revenue["Crecimiento_Revenue"] = df_capex_revenue["Revenue"].pct_change()
@@ -1088,9 +1037,6 @@ df_promedio_crecimiento_revenue = pd.DataFrame.from_dict(
     promedios_crecimiento, orient='index', columns=["Promedio_Crecimiento_Revenue"]
 ).reset_index().rename(columns={"index": "Año"})
 
-
-
-# In[158]:
 
 
 df_inputs = df_capex_revenue.merge(df_net_ppe[["Año", "Net_PPE"]], on="Año")
@@ -1115,7 +1061,6 @@ df_maintenance_capex = df_inputs[["Año", "Maintenance_Capex"]].copy()
 maintenance_capex_promedio = df_maintenance_capex.copy()
 maintenance_capex_promedio["Maintenance_Capex"] = maintenance_capex_promedio["Maintenance_Capex"].round(2)
 
-
 # WACC=( 
 # V
 # E
@@ -1133,9 +1078,6 @@ maintenance_capex_promedio["Maintenance_Capex"] = maintenance_capex_promedio["Ma
 #  ×(1−t))
 #  
 
-# In[159]:
-
-
 # total_shares.index = total_shares.index.str.extract(r'(\d{4})').astype(int)[0]
 
 df_total_shares = total_shares.to_frame(name="Total_Shares")
@@ -1145,17 +1087,12 @@ df_total_shares["Total_Shares"] = pd.to_numeric(df_total_shares["Total_Shares"],
 df_total_shares["Año"] = df_total_shares.index
 
 
-# In[160]:
-
-
 data_stock = pd.read_csv(archivo_stock + '.csv')
 data_stock['Fecha'] = pd.to_datetime(data_stock['Fecha'], format='%Y-%m-%d')
 data_stock['Cierre'] = data_stock['Cierre'].astype(str).str.replace(',', '').astype(float)
 data_stock = data_stock.dropna(subset=['Cierre'])
 data_stock["Año"] = data_stock["Fecha"].dt.year
 
-
-# In[161]:
 
 
 df_total_shares["Fecha_Ref"] = (
@@ -1182,15 +1119,8 @@ for _, row in df_total_shares.iterrows():
 
 resumen_cierre = pd.DataFrame(resultados)
 
-
-# In[162]:
-
-
 precio_accion = resumen_cierre[["Año"]].copy()
 precio_accion["Precio_Accion"] = resumen_cierre[["Promedio_Cierre", "Mediana_Cierre"]].min(axis=1)
-
-
-# In[163]:
 
 
 df_total_shares = df_total_shares[["Año", "Total_Shares"]].copy()
@@ -1199,10 +1129,6 @@ precio_accion = precio_accion.rename(columns={"Precio_Accion": "Precio_Accion_Mi
 
 df_equity = df_total_shares.merge(precio_accion, on="Año", how="inner")
 df_equity["E"] = (df_equity["Total_Shares"] * df_equity["Precio_Accion_Min"]).round(2)
-
-
-# In[164]:
-
 
 Deuda_corto_plazo = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Short-Term Debt & Capital Lease Obligation'].iloc[0, 1:]
 Deuda_largo_plazo = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Long-Term Debt & Capital Lease Obligation'].iloc[0, 1:]
@@ -1224,16 +1150,9 @@ df_deuda_total["Deuda_Total"] = df_deuda_total["Deuda_Corto_Plazo"] + df_deuda_t
 df_deuda_total = df_deuda_total[["Año", "Deuda_Total"]]
 
 
-# In[165]:
-
-
 df_crecimiento_syp = pd.DataFrame(crecimiento_syp_porcentaje_años)[['año_cierre', 'CAGR_%']]
 
 df_crecimiento_syp.columns = ['Año_Cierre', 'Crecimiento_IPC_%5_años']
-
-
-# In[166]:
-
 
 # Asegurar que las columnas clave para el merge sean iguales
 df_crecimiento_syp.columns = ['Año', 'Crecimiento_IPC']
@@ -1251,16 +1170,9 @@ df_r = df_crecimiento_syp.merge(df_beta_resultado, on='Año') \
 df_r['r'] = df_r['CETES'] + df_r['Beta'] * (df_r['Crecimiento_IPC'] - df_r['CETES'])
 
 
-# In[167]:
-
-
 df_r["Cost_of_Equity"] = df_r["CETES"] + df_r["Beta"] * market_risk_premium
 
 df_r["Cost_of_Equity"] = df_r["Cost_of_Equity"].round(5)
-
-
-# In[168]:
-
 
 interest_expense = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == '  Interest Expense'].iloc[0, 1:].abs()
 
@@ -1268,9 +1180,6 @@ df_interest_expense = pd.DataFrame({
     "Año"              : interest_expense.index.values,
     "Interest_Expense" : pd.to_numeric(interest_expense.values, errors="coerce")
 })
-
-
-# In[169]:
 
 
 # Asegurar orden y resetear índices
@@ -1287,19 +1196,12 @@ df_cost_of_debt["Cost_of_Debt"] = df_cost_of_debt["Cost_of_Debt"].round(5)
 
 
 
-# In[170]:
-
-
 tax_rate = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Tax Rate %'].iloc[0, 1:]/100
 
 df_tax = pd.DataFrame({
     'Año': tax_rate.index,
     'Tax_Rate': pd.to_numeric(tax_rate.values, errors='coerce')
 })
-
-
-# In[171]:
-
 
 df_wacc = (
     df_equity[["Año", "E"]]
@@ -1318,10 +1220,6 @@ tax = df_wacc["Tax_Rate"]
 df_wacc["WACC"] = ((E / (E + D)) * re + (D / (E + D)) * rd * (1 - tax)).round(5)
 
 df_wacc = df_wacc[["Año", "WACC"]].dropna().reset_index(drop=True)
-
-
-# In[172]:
-
 
 ne = df_normalized_earnings[["Año", "Normalized_earnings"]].copy()
 mc = df_maintenance_capex[["Año", "Maintenance_Capex"]].copy()
@@ -1343,10 +1241,6 @@ df_epv_base["EPV_Business_Operation"] = np.where(
 df_epv = df_epv_base[["Año", "EPV_Business_Operation"]].copy()
 df_epv["EPV_Business_Operation"] = df_epv["EPV_Business_Operation"].round(2)
 
-
-# In[173]:
-
-
 cash_and_equivalents = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Cash, Cash Equivalents, Marketable Securities'].iloc[0, 1:]
 
 df_cash = pd.DataFrame({
@@ -1357,10 +1251,6 @@ df_cash = pd.DataFrame({
 # Eliminar filas con índice vacío o NaN en "Año"
 df_cash = df_cash.dropna(subset=["Año"])
 df_cash = df_cash[df_cash["Año"].str.strip() != ""].reset_index(drop=True)
-
-
-# In[174]:
-
 
 # Unir todos los DataFrames usando merge sobre la columna 'Año'
 df_epv_unido = (
@@ -1384,13 +1274,9 @@ df_epv_unido["EPV_Final_Por_Accion"] = ((epv_ops + cash - deuda) / shares).round
 # Crear DataFrame final solo con las columnas deseadas
 df_epv_final = df_epv_unido[["Año", "EPV_Final_Por_Accion"]].dropna().reset_index(drop=True)
 
-
 # ## NET CURRENT ASSET VALUE
 
 # Mas usado para empresas con altos valores de current assets
-
-# In[175]:
-
 
 # 1. Definir los datos originales
 total_current_assets = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Total Current Assets'].iloc[0, 1:]
@@ -1415,10 +1301,6 @@ df_liabilities    = clean_to_df(total_liabilities, "Total_Liabilities")
 df_minority       = clean_to_df(minority_interest, "Minority_Interest")
 df_preferred      = clean_to_df(prefered_stock, "Preferred_Stock")
 
-
-# In[176]:
-
-
 total_current_assets = pd.to_numeric(total_current_assets, errors='coerce')
 total_liabilities = pd.to_numeric(total_liabilities, errors='coerce')
 minority_interest = pd.to_numeric(minority_interest, errors='coerce')
@@ -1434,10 +1316,6 @@ df_balance_resumen = pd.DataFrame({
 df_balance_resumen["Año"] = df_balance_resumen.index
 df_balance_resumen = df_balance_resumen.reset_index(drop=True)
 
-
-# In[177]:
-
-
 # Calcular Net Current Asset Value
 df_balance_resumen["Net_Current_Asset_Value"] = (
     df_balance_resumen["Total_Current_Assets"]
@@ -1445,10 +1323,6 @@ df_balance_resumen["Net_Current_Asset_Value"] = (
     - df_balance_resumen["Minority_Interest"]
     - df_balance_resumen["Preferred_Stock"]
 ).round(2)
-
-
-# In[178]:
-
 
 # Asegurar orden
 df_balance_resumen = df_balance_resumen.sort_values("Año").reset_index(drop=True)
@@ -1462,18 +1336,11 @@ df_ncav_per_share = pd.DataFrame({
     "NCAV_Per_Share": ncav_per_share.round(2)
 })
 
-
 # ## Tangicle Book Value
-
-# In[179]:
-
 
 total_equity = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Total Stockholders Equity'].iloc[0, 1:]
 prefered_stock = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Preferred Stock'].iloc[0, 1:]
 intagible_assets = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Intangible Assets'].iloc[0, 1:]
-
-
-# In[180]:
 
 
 total_equity = pd.to_numeric(total_equity, errors='coerce')
@@ -1489,20 +1356,12 @@ df_equity_base = pd.DataFrame({
 df_equity_base["Año"] = df_equity_base.index
 df_equity_base = df_equity_base.reset_index(drop=True)
 
-
-# In[181]:
-
-
 # Calcular Tangible Book Value
 df_equity_base["Tangible_Book_Value"] = (
     df_equity_base["Total_Equity"] -
     df_equity_base["Preferred_Stock"] -
     df_equity_base["Intangible_Assets"]
 ).round(2)
-
-
-# In[182]:
-
 
 # Asegurar orden y reinicio de índice
 df_equity_base = df_equity_base.sort_values("Año").reset_index(drop=True)
@@ -1516,11 +1375,7 @@ df_tangible_book_value_per_share = pd.DataFrame({
     "Tangible_Book_Value_Per_Share": valor_por_accion.round(2)
 })
 
-
 # ## Projected Free Cash Flow
-
-# In[183]:
-
 
 ebitda = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'EBITDA'].iloc[0, 1:]
 free_cash_flow = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Free Cash Flow'].iloc[0, 1:]
@@ -1547,10 +1402,6 @@ df_revenue["Revenue"] = pd.to_numeric(df_revenue["Revenue"], errors="coerce")
 df_revenue["Año"] = df_revenue.index
 df_revenue = df_revenue.reset_index(drop=True)
 
-
-# In[184]:
-
-
 def crecimiento_5_anios(df, columna):
     df = df.copy()
     # 1. Crear una columna temporal de fecha real
@@ -1559,7 +1410,7 @@ def crecimiento_5_anios(df, columna):
         + pd.offsets.MonthEnd(0)
     )
     df = df.sort_values("Fecha_Temp").reset_index(drop=True)
-
+    
     resultados = []
 
     for i in range(len(df)):
@@ -1593,10 +1444,6 @@ df_crecimientos = df_ebitda_crecimiento \
     .merge(df_fcf_crecimiento, on="Año") \
     .merge(df_revenue_crecimiento, on="Año")
 
-
-# In[185]:
-
-
 def calcular_cagr_por_año(df, columna):
     df = df.copy()
     # 1. Crear una columna temporal de fecha real
@@ -1605,7 +1452,7 @@ def calcular_cagr_por_año(df, columna):
         + pd.offsets.MonthEnd(0)
     )
     df = df.sort_values("Fecha_Temp").reset_index(drop=True)
-
+    
     resultados = []
 
     for i in range(len(df)):
@@ -1644,10 +1491,6 @@ df_cagr_todo = df_cagr_ebitda \
     .merge(df_cagr_fcf, on="Año") \
     .merge(df_cagr_revenue, on="Año")
 
-
-# In[186]:
-
-
 df_crecimientos_final = df_crecimientos.merge(df_cagr_todo, on="Año")
 
 # Definir columnas numéricas a evaluar
@@ -1661,7 +1504,7 @@ for _, fila in df_crecimientos_final.iterrows():
         fila[col] for col in columnas_crecimiento 
         if isinstance(fila[col], (int, float)) and pd.notna(fila[col])
     ]
-
+    
     if not valores_numericos:
         # Si de plano no hay números, asignamos el valor base conservador
         valor_final = 0.05
@@ -1669,15 +1512,15 @@ for _, fila in df_crecimientos_final.iterrows():
         # Caso A: Todos los valores están por debajo de 0.05
         if all(v < 0.05 for v in valores_numericos):
             valor_final = 0.05
-
+            
         # Caso B: Todos los valores superan el 0.11
         elif all(v > 0.11 for v in valores_numericos):
             valor_final = 0.11
-
+            
         # Caso C: Ver cuántos caen en el rango ideal [0.05, 0.11]
         else:
             valores_en_rango = [v for v in valores_numericos if 0.05 <= v <= 0.11]
-
+            
             if valores_en_rango:
                 # Si hay valores en rango, tomamos el mínimo de ellos (enfoque conservador)
                 valor_final = min(valores_en_rango)
@@ -1685,7 +1528,7 @@ for _, fila in df_crecimientos_final.iterrows():
                 # Caso D: No hay valores en el rango [0.05, 0.11], pero hay una mezcla (ej. unos < 0.05 y otros > 0.11)
                 # Calculamos el promedio de todos los valores de la fila
                 promedio = sum(valores_numericos) / len(valores_numericos)
-
+                
                 # Acotamos el promedio resultante
                 if promedio < 0.05:
                     valor_final = 0.05
@@ -1701,20 +1544,12 @@ df_min_crecimiento = pd.DataFrame({
     "Crecimiento_Seleccionado": valores_filtrados
 })
 
-
-# In[187]:
-
-
 # Calcular growth_assumption y growth_multiple
 df_min_crecimiento["Growth_Assumption"] = df_min_crecimiento["Crecimiento_Seleccionado"] * 100
 df_min_crecimiento["Growth_Multiple"] = 8.3459 * (1.07 ** (df_min_crecimiento["Growth_Assumption"] - 4))
 
 df_min_crecimiento["Growth_Assumption"] = df_min_crecimiento["Growth_Assumption"].round(2)
 df_min_crecimiento["Growth_Multiple"] = df_min_crecimiento["Growth_Multiple"].round(2)
-
-
-# In[188]:
-
 
 df_fcf = free_cash_flow.to_frame(name="Free_Cash_Flow")
 
@@ -1726,10 +1561,6 @@ df_fcf["Año"] = df_fcf.index
 
 # Resetear índice
 df_fcf = df_fcf.reset_index(drop=True)
-
-
-# In[189]:
-
 
 # Asegurar orden por año
 
@@ -1744,10 +1575,6 @@ for i in range(4, len(df_fcf)):
     promedios_fcf.append({"Año": año, "FCF_5y_Promedio": promedio})
 
 df_fcf_5y_promedio = pd.DataFrame(promedios_fcf)
-
-
-# In[190]:
-
 
 free_cash_flow_4trimestres = df_trimestral_filtrado[df_trimestral_filtrado['Fiscal Period'] == 'Free Cash Flow'].iloc[0, 1:]
 
@@ -1771,10 +1598,10 @@ resultados_trim = []
 
 for _, row in df_fcf_5y_promedio.iterrows():
     periodo_ref = row["Año"]  # Ej. "Nov2023" o "Aug2024"
-
+    
     # Encontrar el índice de este periodo en la tabla trimestral
     match_idx = df_fcf_trim[df_fcf_trim["Periodo"] == periodo_ref].index
-
+    
     if not match_idx.empty:
         idx = match_idx[0]
         # Verificar que tengamos al menos 3 trimestres hacia atrás para promediar (4 puntos en total)
@@ -1786,7 +1613,7 @@ for _, row in df_fcf_5y_promedio.iterrows():
             promedio = None
     else:
         promedio = None
-
+        
     resultados_trim.append({
         "Año": periodo_ref,
         "FCF_Trimestral_Promedio": promedio
@@ -1794,9 +1621,6 @@ for _, row in df_fcf_5y_promedio.iterrows():
 
 # 3. Crear el nuevo DataFrame
 df_fcf_anual_promedio = pd.DataFrame(resultados_trim).dropna().reset_index(drop=True)
-
-
-# In[191]:
 
 
 # Asegurar que el índice sea string y contenga el año
@@ -1818,10 +1642,6 @@ df_total_equity["Total_Stockholders_Equity"] = pd.to_numeric(
 # Limpiar el DataFrame final
 df_total_equity = df_total_equity[["Año", "Total_Stockholders_Equity"]]
 
-
-# In[192]:
-
-
 # Asegurar que ambas tablas estén ordenadas y listas
 df_fcf_5y_promedio = df_fcf_5y_promedio.sort_values("Año").reset_index(drop=True)
 df_fcf_anual_promedio = df_fcf_anual_promedio.sort_values("Año").reset_index(drop=True)
@@ -1834,10 +1654,6 @@ df_fcf_ajustado["FCF_Ajustado"] = (
     (6 * df_fcf_ajustado["FCF_5y_Promedio"] + 0.75 * df_fcf_ajustado["FCF_Trimestral_Promedio"]) / 6.75
 ).round(2)
 
-
-# In[193]:
-
-
 df_resultados_inf_usa["Tasa de Inflación"] = pd.to_numeric(
     df_resultados_inf_usa["Tasa de Inflación"], errors="coerce"
 )
@@ -1846,10 +1662,6 @@ df_resultados_inf_usa["Tasa de Inflación"] = pd.to_numeric(
 df_resultados_inf_usa["Factor_Inflacion"] = (
     (1 + df_resultados_inf_usa["Tasa de Inflación"]) ** 3
 ).round(4)
-
-
-# In[194]:
-
 
 # 1. Crear una columna temporal con el año numérico de 4 dígitos en df_fcf_ajustado
 df_fcf_ajustado["Año_Num"] = pd.to_datetime(df_fcf_ajustado["Año"], format="%b%Y").dt.year
@@ -1879,7 +1691,6 @@ df_fcf_ajustado_inflacion = (
 )
 
 
-# In[195]:
 
 
 # Unir todos por año
@@ -1898,10 +1709,7 @@ df_intrinsic["Intrinsic_Value"] = (
     df_intrinsic["Total_Shares"]
 ).round(2)
 
-
 # ## Median PS value
-
-# In[196]:
 
 
 revenue_serie = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Revenue'].iloc[0, 1:]
@@ -1919,10 +1727,6 @@ shares_serie.index = shares_serie.index.astype(str)
 shares_serie = pd.to_numeric(shares_serie, errors='coerce').dropna()
 
 revenue_per_share = revenue_serie / shares_serie
-
-
-# In[197]:
-
 
 data_stock['Fecha'] = pd.to_datetime(data_stock['Fecha'], format='%d.%m.%Y')
 
@@ -1958,10 +1762,6 @@ ratio_ps_anual_mediana = mediana_cierre_por_anio / revenue_per_share
 ratio_ps_anual_promedio = ratio_ps_anual_promedio.dropna()
 ratio_ps_anual_mediana = ratio_ps_anual_mediana.dropna()
 
-
-# In[198]:
-
-
 # Ordenar cronológicamente por fecha (MmmYYYY -> fecha real)
 idx_dates = pd.to_datetime(ratio_ps_anual_promedio.index, format='%b%Y')
 ratio_ps_anual_promedio = ratio_ps_anual_promedio.iloc[idx_dates.argsort()]
@@ -1985,9 +1785,6 @@ df_mediana_10y_mediana = (
 )
 
 
-# In[199]:
-
-
 # Convertir a DataFrames con columna 'Año'
 df_med_prom = df_mediana_10y_promedio.rename_axis('Año').reset_index(name='Mediana_PS_Prom')
 df_med_med  = df_mediana_10y_mediana.rename_axis('Año').reset_index(name='Mediana_PS_Med')
@@ -2005,8 +1802,6 @@ Median_ps_value_promedio_mediana = df_ps[['Año', 'Median_ps_value_promedio_medi
 
 # ## Graham Number
 
-# In[200]:
-
 
 eps_without_nri = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'EPS without NRI'].iloc[0, 1:]
 
@@ -2021,26 +1816,15 @@ df_eps = df_eps[["Año", "EPS"]].reset_index(drop=True)
 
 
 
-# In[201]:
-
 
 df_eps["EPS"] = pd.to_numeric(df_eps["EPS"], errors="coerce")
 
 df_graham = df_tangible_book_value_per_share.merge(df_eps, on="Año", how="inner")
 
 # Calcular Graham Number por año
-# df_graham["Graham_Number"] = np.where(
-#     df_graham["EPS"] > 0,
-#     np.sqrt(22.5 * df_graham["Tangible_Book_Value_Per_Share"] * df_graham["EPS"]),
-#     0
-# )
-# Multiplicamos los datos
-producto = 22.5 * df_graham["Tangible_Book_Value_Per_Share"] * df_graham["EPS"]
-
-# np.maximum(0, producto) reemplaza cualquier valor negativo por 0 antes de calcular np.sqrt
 df_graham["Graham_Number"] = np.where(
-    (df_graham["EPS"] > 0) & (df_graham["Tangible_Book_Value_Per_Share"] > 0),
-    np.sqrt(np.maximum(0, producto)),
+    df_graham["EPS"] > 0,
+    np.sqrt(22.5 * df_graham["Tangible_Book_Value_Per_Share"] * df_graham["EPS"]),
     0
 )
 
@@ -2062,14 +1846,8 @@ df_graham = df_graham[["Año", "Graham_Number"]].reset_index(drop=True)
 # Si la tasa de crecimiento a 5 años es mayor al 25% anual, se limita a 25%.
 # Si la tasa de crecimiento a 5 años es menor al 5% anual, no se calcula el Valor Justo de Peter Lynch.
 
-# In[202]:
-
-
 peg_ratio = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'PEG Ratio'].iloc[0, 1:]
 ebitda5anios = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'EBITDA'].iloc[0, 1:]
-
-
-# In[203]:
 
 
 # ebitda5anios = ebitda5anios.sort_index()
@@ -2096,10 +1874,6 @@ df_crecimiento_ebitda_5y = (
     .dropna()
 )
 
-
-# In[204]:
-
-
 eps_without_nri = pd.to_numeric(eps_without_nri, errors="coerce")
 df_crecimiento_ebitda_5y["Crecimiento_EBITDA_5Y"] = pd.to_numeric(
     df_crecimiento_ebitda_5y["Crecimiento_EBITDA_5Y"], errors="coerce"
@@ -2115,15 +1889,8 @@ df_peter["Peter_Lynch_Value_1"] = 1 * df_peter["Crecimiento_EBITDA_5Y"] * df_pet
 
 df_peter = df_peter[["Peter_Lynch_Value_1"]]
 
-
-# In[205]:
-
-
 # Convertir PEG ratio a numérico
 peg_ratio = pd.to_numeric(peg_ratio, errors="coerce")
-
-
-# In[206]:
 
 
 # Unir crecimiento EBITDA + EPS + PEG ratio
@@ -2143,23 +1910,12 @@ df_peter_2["Peter_Lynch_Value_2"] = (
 
 # ## DCF (FCF BASED)
 
-# In[207]:
-
-
 discount_rate = promedio_bonos.assign(
     Discount_Rate=promedio_bonos["CETES"] + market_risk_premium
 )[["Año", "Discount_Rate"]]
 
-
-# In[208]:
-
-
 fcf_per_share = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Free Cash Flow per Share'].iloc[0, 1:]
-growth_rates = fcf_per_share.pct_change().dropna()
-
-
-# In[209]:
-
+growth_rates = fcf_per_share.pct_change().dropna().infer_objects(copy=False)
 
 growth_rates = pd.to_numeric(growth_rates, errors="coerce").sort_index(key=lambda idx: pd.to_datetime(idx.astype(str), format="%b%Y"))
 
@@ -2184,17 +1940,10 @@ df_mediana_growth_10y = (
 
 
 
-# In[210]:
-
-
 # --- Limpiar growth_rates: DecYYYY -> Año (int) ---
 growth_rates = pd.to_numeric(growth_rates, errors="coerce")
 
 growth_rates.index.name = "Año"
-
-
-# In[211]:
-
 
 free_cash_flow = pd.to_numeric(free_cash_flow, errors="coerce").sort_index(key=lambda idx: pd.to_datetime(idx.astype(str), format="%b%Y"))
 
@@ -2202,9 +1951,6 @@ free_cash_flow.index.name = "Año"
 
 # --- Pesos: FCF del año anterior ---
 weights = free_cash_flow.shift(1)
-
-
-# In[212]:
 
 
 # Alinear por indice: solo los años presentes en ambas series, ordenados por fecha real
@@ -2221,10 +1967,6 @@ weighted_growth_10y = (
 
 df_weighted_growth_10y = weighted_growth_10y.to_frame(name="Weighted_Growth_10Y")
 
-
-# In[213]:
-
-
 # df_weighted_growth_10y
 df_weighted_growth_10y["Weighted_Growth_10Y"] = (
     df_weighted_growth_10y["Weighted_Growth_10Y"]
@@ -2235,10 +1977,6 @@ df_mediana_growth_10y["Mediana_Growth_10Y"] = (
     df_mediana_growth_10y["Mediana_Growth_10Y"]
         .clip(lower=0.05, upper=0.25)
 )
-
-
-# In[214]:
-
 
 def crecimiento_10_anios(df, columna):
     df = df.copy()
@@ -2312,15 +2050,8 @@ def calcular_cagr_por_año(df, columna, ventana_max=10, min_anios=2):
     return pd.DataFrame(resultados)
 
 
-# In[215]:
-
-
 df_fcf_crecimiento_10 = crecimiento_10_anios(df_fcf, "Free_Cash_Flow")
 df_cagr_fcf_10 = calcular_cagr_por_año(df_fcf, "Free_Cash_Flow")
-
-
-# In[216]:
-
 
 # df_fcf_crecimiento
 col = df_fcf_crecimiento_10.columns[1]
@@ -2331,25 +2062,15 @@ col = df_cagr_fcf_10.columns[1]
 df_cagr_fcf_10[col] = df_cagr_fcf_10[col].clip(lower=0.05, upper=0.25)
 
 
-# In[217]:
-
-
 y1 = 10
 g2 = 0.04
 y2 = 10
 fcf_per_share = df_anual_filtrado[df_anual_filtrado['Fiscal Period'] == 'Free Cash Flow per Share'].iloc[0, 1:]
 
-
-# In[218]:
-
-
 df_y = discount_rate.copy()
 df_y["y"] = (1 + g2) / (1 + df_y["Discount_Rate"])
 
 df_y = df_y[["Año", "y"]]
-
-
-# In[219]:
 
 
 def calcular_x(df_g, df_discount):
@@ -2384,19 +2105,11 @@ x_mediana  = calcular_x(df_mediana_growth_10y, discount_rate)
 x_fcf_avg  = calcular_x(df_fcf_crecimiento_10, discount_rate)
 x_cagr_fcf = calcular_x(df_cagr_fcf_10, discount_rate)
 
-
-# In[220]:
-
-
 fcf_per_share = pd.to_numeric(fcf_per_share, errors="coerce")
 # fcf_per_share.index = pd.to_datetime(fcf_per_share.index.astype(str), format="%b%Y").year
 fcf_per_share.index.name = "Año"
 
 df_fcf_per_share = fcf_per_share.to_frame(name="FCF_per_Share")
-
-
-# In[221]:
-
 
 df_y = df_y.copy()
 if "Año" in df_y.columns:
@@ -2404,10 +2117,6 @@ if "Año" in df_y.columns:
     df_y = df_y.set_index("Año")
 df_y.index.name = "Año"
 df_y["y"] = pd.to_numeric(df_y["y"], errors="coerce")
-
-
-# In[222]:
-
 
 # Función robusta: acepta df_x con Año como índice o columna 
 def calcular_intrinsic_value_fcf(df_x, df_y, df_fcf_per_share):
@@ -2451,14 +2160,7 @@ df_intrinsic_cagr_fcf = calcular_intrinsic_value_fcf(x_cagr_fcf, df_y, df_fcf_pe
 
 # ## DCF(Earnigs Based)
 
-# In[223]:
-
-
 growth_rates_eps = eps_without_nri.pct_change().dropna()
-
-
-# In[224]:
-
 
 # Mediana móvil: hasta 10 años hacia atrás (usa lo que haya)
 mediana_growth_10y_eps = (
@@ -2473,10 +2175,6 @@ df_mediana_growth_10y_eps = (
 )
 
 df_mediana_growth_10y_eps.index.name = "Año"
-
-
-# In[225]:
-
 
 # Asegurar free_cash_flow numérico (mismo índice por año)
 eps_without_nri = pd.to_numeric(eps_without_nri, errors="coerce")
@@ -2504,10 +2202,6 @@ df_weighted_growth_10y_eps = weighted_growth_10y_eps.to_frame(name="Weighted_Gro
 
 df_weighted_growth_10y_eps.index.name = "Año"
 
-
-# In[226]:
-
-
 # df_weighted_growth_10y
 df_weighted_growth_10y_eps["Weighted_Growth_10Y_eps"] = (
     df_weighted_growth_10y_eps["Weighted_Growth_10Y_eps"]
@@ -2519,16 +2213,8 @@ df_mediana_growth_10y_eps["Mediana_Growth_10Y_eps"] = (
         .clip(lower=0.05, upper=0.20)
 )
 
-
-# In[227]:
-
-
 df_eps_crecimiento_10 = crecimiento_10_anios(df_eps, "EPS")
 df_cagr_eps_10 = calcular_cagr_por_año(df_eps, "EPS")
-
-
-# In[228]:
-
 
 # df_fcf_crecimiento
 col = df_eps_crecimiento_10.columns[1]
@@ -2538,16 +2224,9 @@ df_eps_crecimiento_10[col] = df_eps_crecimiento_10[col].clip(lower=0.05, upper=0
 col = df_cagr_eps_10.columns[1]
 df_cagr_eps_10[col] = df_cagr_eps_10[col].clip(lower=0.05, upper=0.20)
 
-
-# In[229]:
-
-
 y1 = 10
 g2 = 0.04
 y2 = 10
-
-
-# In[230]:
 
 
 df_weighted_growth_10y_eps_x = calcular_x(df_weighted_growth_10y_eps, discount_rate)
@@ -2555,18 +2234,10 @@ df_mediana_growth_10y_eps_x = calcular_x(df_mediana_growth_10y_eps, discount_rat
 df_eps_crecimiento_10_x = calcular_x(df_eps_crecimiento_10, discount_rate)
 df_cagr_eps_10_x = calcular_x(df_cagr_eps_10, discount_rate)
 
-
-# In[231]:
-
-
 eps_without_nri = pd.to_numeric(eps_without_nri, errors="coerce")
 eps_without_nri.index.name = "Año"
 
 df_eps_without_nri = eps_without_nri.to_frame(name="EPS_without_NRI")
-
-
-# In[232]:
-
 
 def calcular_intrinsic_value_eps(df_x, df_y, df_eps):
     # "Año" es tipo "Nov2023", "Aug2024" (mes+año); se conserva tal cual en los
@@ -2618,11 +2289,7 @@ df_mediana_growth_10y_eps_value = calcular_intrinsic_value_eps(df_mediana_growth
 df_eps_crecimiento_10_value = calcular_intrinsic_value_eps(df_eps_crecimiento_10_x, df_y ,df_eps)
 df_cagr_eps_10_value = calcular_intrinsic_value_eps(df_cagr_eps_10_x, df_y ,df_eps)
 
-
 # ## Tabla con valores de acciones y limpieza de df
-
-# In[233]:
-
 
 # Copia para no modificar el original
 df_bvps = book_value_per_share_anual.copy()
@@ -2650,9 +2317,6 @@ df_bvps = (
 )
 
 
-# In[234]:
-
-
 def serie_a_df_anual(serie, nombre_columna):
     s = pd.to_numeric(serie, errors="coerce")
 
@@ -2670,22 +2334,11 @@ def serie_a_df_anual(serie, nombre_columna):
     return df
 
 
-# In[235]:
-
-
 df_intrinsic_limpio = df_intrinsic[["Año", "Intrinsic_Value"]].copy()
-
-
-# In[236]:
-
 
 df_liquidation_value_per_share = serie_a_df_anual(liquidation_value_per_share, "Liquidation_Value_Per_Share")
 df_Median_ps_value_promedio = Median_ps_value_promedio
 df_Median_ps_value_promedio_mediana = Median_ps_value_promedio_mediana
-
-
-# In[237]:
-
 
 df_peter  = df_peter.reset_index().rename(columns={df_peter.index.name or "index": "Año"})
 df_peter_2 = df_peter_2.reset_index().rename(columns={df_peter_2.index.name or "index": "Año"})
@@ -2697,10 +2350,6 @@ df_weighted_growth_10y_eps_value = df_weighted_growth_10y_eps_value.reset_index(
 df_mediana_growth_10y_eps_value = df_mediana_growth_10y_eps_value.reset_index().rename(columns={df_mediana_growth_10y_eps_value.index.name or "index": "Año"})
 df_eps_crecimiento_10_value = df_eps_crecimiento_10_value.reset_index().rename(columns={df_eps_crecimiento_10_value.index.name or "index": "Año"})
 df_cagr_eps_10_value = df_cagr_eps_10_value.reset_index().rename(columns={df_cagr_eps_10_value.index.name or "index": "Año"})
-
-
-# In[238]:
-
 
 df_intrinsic_weighted  = df_intrinsic_weighted.rename(
     columns={df_intrinsic_weighted.columns[1]: "Intrinsic_Weighted"}
@@ -2718,10 +2367,6 @@ df_intrinsic_cagr_fcf  = df_intrinsic_cagr_fcf.rename(
     columns={df_intrinsic_cagr_fcf.columns[1]: "Intrinsic_CAGR_FCF"}
 )
 
-
-# In[239]:
-
-
 df_weighted_growth_10y_eps_value  = df_weighted_growth_10y_eps_value.rename(
     columns={df_weighted_growth_10y_eps_value.columns[1]: "Intrinsic_EPS_Weighted"}
 )
@@ -2738,10 +2383,6 @@ df_cagr_eps_10_value  = df_cagr_eps_10_value.rename(
     columns={df_cagr_eps_10_value.columns[1]: "Intrinsic_CAGR_EPS"}
 )
 
-
-# In[240]:
-
-
 def obtener_serie_fiscal(df, fiscal_period, nombre_columna):
 
     tmp = df.loc[df["Fiscal Period"] == fiscal_period]
@@ -2753,9 +2394,6 @@ def obtener_serie_fiscal(df, fiscal_period, nombre_columna):
 
     serie = tmp.iloc[0, 1:]
     return serie_a_df_anual(serie, nombre_columna)
-
-
-# In[241]:
 
 
 df_book_value_guru = obtener_serie_fiscal(
@@ -2806,8 +2444,6 @@ df_gf_value_guru = obtener_serie_fiscal(
     "GF_Value_Guru"
 )
 
-
-# In[242]:
 
 
 # Lista "candidata" por nombre (evita NameError si alguno no existe)
@@ -2871,9 +2507,6 @@ if len(df_valuaciones) > 5:
 
 # ## Modelo de Targets
 
-# In[243]:
-
-
 data_stock_modelo = pd.read_csv(archivo_stock + '.csv')
 data_stock_modelo.drop(columns=["Vol.","Cierre","Apertura"], inplace=True)
 data_stock_modelo["Fecha"] = pd.to_datetime(
@@ -2881,18 +2514,11 @@ data_stock_modelo["Fecha"] = pd.to_datetime(
     format="%Y-%m-%d"
 )
 
-
-# In[244]:
-
-
 prices = data_stock_modelo.copy()
 
 prices["Fecha"] = pd.to_datetime(prices["Fecha"])
 
 prices = prices.sort_values("Fecha").reset_index(drop=True)
-
-
-# In[245]:
 
 
 mes_map = {
@@ -2926,9 +2552,6 @@ valuations = valuations.merge(
 )
 
 
-# In[246]:
-
-
 price_dates = prices[["Fecha"]]
 
 valuations = pd.merge_asof(
@@ -2942,9 +2565,6 @@ valuations = pd.merge_asof(
 valuations = valuations.rename(columns={"Fecha": "Fecha_base"})
 
 valuations[["Año", "Fecha_teorica", "Fecha_base"]].head()
-
-
-# In[247]:
 
 
 id_cols = ["Año", "Fecha_base"]
@@ -2970,9 +2590,6 @@ valuations_long["Valor"] = pd.to_numeric(valuations_long["Valor"], errors="coerc
 valuations_long = valuations_long.dropna(subset=["Valor"])
 
 
-# In[248]:
-
-
 tol = 0.05
 H = 156
 
@@ -2988,22 +2605,11 @@ assert prices["Fecha"].is_monotonic_increasing
 assert {HIGH_COL, LOW_COL}.issubset(prices.columns)
 assert {"Fecha_base", "Metodo", "Valor"}.issubset(valuations_long.columns)
 
-
-# In[249]:
-
-
 valuations_long["L"] = valuations_long["Valor"] * (1 - tol)
 valuations_long["U"] = valuations_long["Valor"] * (1 + tol)
 
 
-# In[250]:
-
-
 valuations_long["Fecha_fin"] = valuations_long["Fecha_base"] + pd.to_timedelta(H, unit="W")
-
-
-# In[251]:
-
 
 prices["Fecha"] = pd.to_datetime(prices["Fecha"], errors="coerce")
 
@@ -3019,10 +2625,6 @@ for c in [HIGH_COL, LOW_COL]:
 
 
 prices = prices.dropna(subset=["Fecha", HIGH_COL, LOW_COL]).sort_values("Fecha").reset_index(drop=True)
-
-
-# In[252]:
-
 
 def first_hit(fecha_base, fecha_fin, valor, L, U):
     if valor is None or pd.isna(valor) or valor <= 0:
@@ -3070,9 +2672,6 @@ def first_hit(fecha_base, fecha_fin, valor, L, U):
     return True, tth_weeks, hit_date, side
 
 
-# In[253]:
-
-
 hits = valuations_long.apply(
     lambda r: first_hit(r["Fecha_base"], r["Fecha_fin"], r["Valor"], r["L"], r["U"]),
     axis=1,
@@ -3083,9 +2682,6 @@ hits.columns = ["hit", "tth_weeks", "hit_date", "side"]
 valuations_long[["hit", "tth_weeks", "hit_date", "side"]] = hits
 
 
-# In[254]:
-
-
 valuations_long[["Año","Metodo","Valor","Fecha_base","hit","tth_weeks","hit_date"]]
 
 # Convertir NaT -> NaN en hit (y cualquier cosa rara)
@@ -3093,9 +2689,6 @@ valuations_long["hit"] = valuations_long["hit"].replace({pd.NaT: np.nan})
 
 # Fuerza dtype booleano nullable (permite True/False/<NA>)
 valuations_long["hit"] = valuations_long["hit"].astype("boolean")
-
-
-# In[255]:
 
 
 summary = (
@@ -3129,9 +2722,6 @@ summary = summary.sort_values(
 ).reset_index(drop=True)
 
 
-# In[256]:
-
-
 # Hit rate en los últimos 10 años por método
 fecha_anio = pd.to_datetime(valuations_long["Año"], format="%b%Y", errors="coerce")
 anio_max = fecha_anio.max()
@@ -3162,17 +2752,9 @@ df_hits_por_anio = (
     .reset_index(drop=True)
 )
 
-
-# In[257]:
-
-
 df_hits_por_anio.to_excel(f'Valuaciones_USA/{ticket}_valuaciones_hits_por_anio.xlsx', index=False)
 
-
 # ## Calificacion ratios
-
-# In[258]:
-
 
 ratios_a_eliminar = [
     "Net Income",
@@ -3190,10 +2772,6 @@ ratios_a_eliminar = [
 ]
 
 razones_financieras_ratios = razones_financieras.drop(index=ratios_a_eliminar, errors="ignore")
-
-
-# In[259]:
-
 
 # SISTEMA DE PONDERACIÓN - Importancias y funciones de scoring
 
@@ -3305,10 +2883,12 @@ def calcular_score(ratio, val, series, idx, wacc_val=np.nan):
 
     # FCF to Debt: >=1 excelente, decreciente hacia 0 peor
     if ratio == 'Free Cash Flow to Debt ratio':
+        if isinstance(val, str) and val.lower() == 'no deuda':
+            return 1.0
         if val >= 1:   return 1.0
         if val >= 0.8: return 0.75
-        if val >= 0.6:   return 0.25
-        if val >= 0.4 : return 0.10
+        if val >= 0.6: return 0.25
+        if val >= 0.4: return 0.10
         return 0.0
 
     # Dividend Payout: 20-60% óptimo; sin dividendo → neutro
@@ -3318,9 +2898,11 @@ def calcular_score(ratio, val, series, idx, wacc_val=np.nan):
 
     # Net Income / LT Debt: >=3 excelente, >=1 bueno
     if ratio == 'net worth to long-term debt ratio':
-        if val >= 3: return 1.0
-        if val >= 2: return 0.75
-        if val >= 1: return 0.5
+        if isinstance(val, str) and val.lower() == 'no deuda':
+            return 1.0
+        if val >= 3:   return 1.0
+        if val >= 2:   return 0.75
+        if val >= 1:   return 0.5
         if val >= 0.5: return 0.25
         return 0.0
 
@@ -3340,6 +2922,8 @@ def calcular_score(ratio, val, series, idx, wacc_val=np.nan):
 
     # LT Debt-to-Equity: <25% bueno, <45% neutro, >=75% alto apalancamiento
     if ratio == 'long-term debt-to-equity(%)':
+        if isinstance(val, str) and val.lower() == 'no deuda':
+            return 1.0
         if val < 0: return 0.0
         return 1.0 if val < 25 else (0.5 if val < 45 else 0.0)
 
@@ -3439,9 +3023,6 @@ def calcular_score(ratio, val, series, idx, wacc_val=np.nan):
     return np.nan
 
 
-# In[260]:
-
-
 # APLICAR SCORING Y CALCULAR PONDERACIÓN
 
 # Fila de WACC para comparar con ROIC
@@ -3455,10 +3036,12 @@ wacc_row = (
 df_scores = pd.DataFrame(index=razones_financieras_ratios.index, columns=year_cols, dtype=float)
 
 for ratio in razones_financieras_ratios.index:
-    row_vals = pd.to_numeric(razones_financieras_ratios.loc[ratio, year_cols], errors='coerce')
+    row_raw  = razones_financieras_ratios.loc[ratio, year_cols]
+    row_vals = pd.to_numeric(row_raw, errors='coerce')
     for i, yr in enumerate(year_cols):
-        val    = row_vals.iloc[i]
-        wacc_v = wacc_row.get(yr, np.nan)
+        raw_val = row_raw.iloc[i]
+        val     = raw_val if isinstance(raw_val, str) and raw_val.lower() == 'no deuda' else row_vals.iloc[i]
+        wacc_v  = wacc_row.get(yr, np.nan)
         df_scores.loc[ratio, yr] = calcular_score(ratio, val, row_vals, i, wacc_v)
 
 df_scores = df_scores.astype(float)
@@ -3487,9 +3070,6 @@ df_score_total = pd.Series(score_total, name='Score Total (%)')
 
 
 
-# In[261]:
-
-
 # Agregar fila Score Total al df_scores_ponderados
 score_total_row = df_scores_ponderados[year_cols].sum(skipna=True)
 score_total_row["% importancia"] = pesos.sum()
@@ -3499,10 +3079,5 @@ df_scores_ponderados_con_total = pd.concat([
 ])
 
 
-# In[262]:
-
-
 df_scores_ponderados_con_total.to_excel(f"Valuaciones_USA/{ticket}_score_ponderados.xlsx")
 razones_financieras.to_excel(f"Valuaciones_USA/{ticket}_razones_financieras.xlsx")
-
-print("Codigo Terminado")
